@@ -74,7 +74,7 @@ WHERE EXISTS (SELECT *
                 WHERE a2.actor_id <> a1.actor_id and a2.last_name = a1.last_name)
 order by a1.last_name asc;
 
-#Find actors that don't work in any film
+#Find actors that dont work in any film
 
 SELECT a1.last_name 
 FROM actor a1
@@ -138,7 +138,7 @@ and EXISTS (SELECT *
         where a1.actor_id = fa.actor_id and fa.film_id = f.film_id 
         and f.title = "CATCH AMISTAD");
 
-#List all the actors that didn't work in 'BETRAYED REAR' or 'CATCH AMISTAD'
+#List all the actors that didnt work in 'BETRAYED REAR' or 'CATCH AMISTAD'
 
 SELECT a1.last_name 
 FROM actor a1
@@ -184,7 +184,7 @@ FROM customer c
 join payment p on c.customer_id = p.customer_id
 WHERE p.amount <= ALL (SELECT p.amount from payment p WHERE p.customer_id = c.customer_id)
 ;
-#Generate a report that shows the customer's information with the highest payment and the lowest payment in the same row.
+#Generate a report that shows the customers information with the highest payment and the lowest payment in the same row.
 
 SELECT c.last_name, (SELECT MIN(p.amount) from payment p WHERE p.customer_id = c.customer_id), (SELECT MAX(p.amount) from payment p where p.customer_id = c.customer_id),a.address
 FROM customer c
