@@ -146,16 +146,10 @@ where NOT exists (SELECT *
         FROM film f
         join film_actor fa on f.film_id = fa.film_id
         where a1.actor_id = fa.actor_id and fa.film_id = f.film_id 
-        and f.title = "BETRAYED REAR")
-and NOT EXISTS (SELECT * 
-        FROM film f
-        join film_actor fa on f.film_id = fa.film_id
-        where a1.actor_id = fa.actor_id and fa.film_id = f.film_id 
-        and f.title = "CATCH AMISTAD");
-
+        and (f.title = "BETRAYED REAR" or f.title = "CATCH AMISTAD"));
 ----------------------------------------------------------------------
 #Class07
-#Find the films with less duration, show the title and rating.
+#Find the films with the less duration, show the title and rating.
 
 SELECT title 
 FROM film
@@ -179,9 +173,10 @@ join address a on c.address_id = a.address_id
 order by c.last_name asc
 ;
 
-SELECT DISTINCT c.last_name, p.amount
+SELECT distinct c.last_name, p.amount, a.address
 FROM customer c
 join payment p on c.customer_id = p.customer_id
+join address a on c.address_id = a.address_id
 WHERE p.amount <= ALL (SELECT p.amount from payment p WHERE p.customer_id = c.customer_id)
 ;
 #Generate a report that shows the customers information with the highest payment and the lowest payment in the same row.
