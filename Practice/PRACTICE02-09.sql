@@ -179,7 +179,7 @@ join address a on c.address_id = a.address_id
 order by c.last_name asc
 ;
 
-SELECT c.last_name, p.amount
+SELECT DISTINCT c.last_name, p.amount
 FROM customer c
 join payment p on c.customer_id = p.customer_id
 WHERE p.amount <= ALL (SELECT p.amount from payment p WHERE p.customer_id = c.customer_id)
