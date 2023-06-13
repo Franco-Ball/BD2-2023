@@ -265,3 +265,11 @@ from customer c
 join rental r on c.customer_id = r.customer_id
 where r.return_date = null
 ;
+
+#Obtener todos los rental cuyo precio de alquiler este entre 2 y 7
+
+SELECT r.rental_id
+from rental r
+inner join payment p on r.rental_id = p.rental_id
+where p.amount BETWEEN 2 and 7
+;
