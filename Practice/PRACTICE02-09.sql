@@ -257,3 +257,11 @@ order by money_raised desc
 
 describe rental;
 -----------------------------------------------------------
+
+#mostrar todos los clientes que hayan alquilado una pelicula pero que todavia no fueron devueltas
+
+SELECT c.last_name
+from customer c
+join rental r on c.customer_id = r.customer_id
+where r.return_date = null
+;
