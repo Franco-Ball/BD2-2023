@@ -273,3 +273,9 @@ from rental r
 inner join payment p on r.rental_id = p.rental_id
 where p.amount BETWEEN 2 and 7
 ;
+
+SELECT film_id, replacement_cost FROM film;
+
+
+
+#write a query that returns all customers using sakiladb
