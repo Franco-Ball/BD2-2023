@@ -459,15 +459,69 @@ Create a new column called lastUpdate to table employee and use trigger(s) to ke
 Bonus: add a column lastUpdateUser and the respective trigger(s) to specify who was the last MySQL user that changed the row (assume multiple users, other than root, can connect to MySQL and change this table).
 */
 
+#Addear columna lastUpdate a la tabla employee
 ALTER Table employees
 add COLUMN lastUpdate DATETIME
 
+#Addear columna USER_MASTER a la tabla employee
+ALTER Table employees
+add COLUMN USER_MASTER VARCHAR(100)
+
 SELECT * FROM employees
 
-
+#Crear TRIGGER que actualiza lastUpdate
+DELIMITER $$
 CREATE Trigger UPDATE_TIME 
-after UPDATE ON employees
+before UPDATE ON employees
+for EACH row
 BEGIN
-UPDATE employees SET `lastUpdate` = CURRENT_TIMESTAMP WHERE `employeeNumber` = 1036
+    SET NEW.lastUpdate = CURRENT_TIMESTAMP;
+END;
+$$
+DELIMITER ;
 
+#Crear TRIGGER que actualiza USER_MASTER
+DELIMITER $$
+Create Trigger UPDATE_USER
+BEFORE UPDATE on employees
+for EACH row
+begin
+    set NEW.USER_MASTER = USER();
+end;
+$$
+DELIMITER ;
+
+/*
+6)
+6- Find all the triggers in sakila db related to loading film_text table. What do they do? 
+Explain each of them using its source code for the explanation.
+*/
+
+SHOW TRIGGERs;
+
+# Ins_film
+BEGIN
+INSERT INTO film_text (film_id, title, description)
+VALUES (new.film_id, new.title, new.description);   
 END
+#copia los valores de film_id, title, y description de una fila recién insertada en otra tabla llamada film_text. 
+
+#upd_film
+BEGIN
+IF (old.title != new.title) OR (old.description != new.description) OR (old.film_id != new.film_id)
+THEN
+UPDATE film_text SET title=new.title, description=new.description, film_id=new.film_id 
+WHERE film_id=old.film_id;
+END IF;   
+END
+#updatea automáticamente los valores en la tabla film_text cuando se modifica una fila en otra tabla. 
+
+#del_film
+BEGIN     
+DELETE FROM film_text 
+WHERE film_id = old.film_id;   
+END
+#borra automáticamente filas en la tabla film_text cuando se elimina una fila correspondiente en otra tabla. 
+
+
+# +------------------------------- CLASS 17 ---------------------------------------------+
