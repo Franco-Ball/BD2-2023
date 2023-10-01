@@ -290,7 +290,7 @@ customer id
 customer full name,
 address
 zip code
-phone
+phone // NO TIENE
 city
 country
 status (when active column is 1 show it as 'active', otherwise is 'inactive')
@@ -396,3 +396,78 @@ Materialized views, write a description, why they are used, alternatives, DBMS w
 Una de sus alternativas es una simple vista, la cual no se almacena en la memoria y siempre se actualiza cuando modificamos los datos de una tabla.
 Las vistas materializadas son existen en los siguientes DBMS: PostgreSQL, MySQL, Microsoft SQL Server, Oravle, Snowflake, Redshift, MongoDB, entre otros
  */
+
+
+# +------------------------------- CLASS 16 ---------------------------------------------+
+#hay que crear una tabla para esta clase
+
+CREATE TABLE `employees` (
+  `employeeNumber` int(11) NOT NULL,
+  `lastName` varchar(50) NOT NULL,
+  `firstName` varchar(50) NOT NULL,
+  `extension` varchar(10) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `officeCode` varchar(10) NOT NULL,
+  `reportsTo` int(11) DEFAULT NULL,
+  `jobTitle` varchar(50) NOT NULL,
+  PRIMARY KEY (`employeeNumber`)
+);
+#metemos datos
+insert  into `employees`(`employeeNumber`,`lastName`,`firstName`,`extension`,`email`,`officeCode`,`reportsTo`,`jobTitle`) values 
+(1002,'Murphy','Diane','x5800','dmurphy@classicmodelcars.com','1',NULL,'President'),
+(1056,'Patterson','Mary','x4611','mpatterso@classicmodelcars.com','1',1002,'VP Sales'),
+(1076,'Firrelli','Jeff','x9273','jfirrelli@classicmodelcars.com','1',1002,'VP Marketing');
+
+/*
+1)
+ Insert a new employee to , but with an null email. Explain what happens.
+*/
+
+INSERT INTO employees(employeeNumber, lastName, firstName, extension, email, officeCode, reportsTo, jobTitle) 
+VALUES(1002,'RIQUELME','ROMAN','x5800',NULL,'1',NULL,'Aguatero')
+#En la tabla dice que no puede ser null por eso si pones null no anda
+
+/*
+2)
+Run the queries
+*/
+UPDATE employees SET employeeNumber = employeeNumber - 20;
+#Se le resto 20 a employeeNumber en toda la tabla employees
+UPDATE employees SET employeeNumber = employeeNumber + 20
+#Intentas sumar 20 a la pk y justo ya existe uno con ese valor y no te deja
+
+/*
+3)
+Add a age column to the table employee where and it can only accept values from 16 up to 70 years old.
+*/
+#Cuando metes los datos CHECK comprueba que cumpla con las condiciones que le digas
+ALTER Table employees
+ADD COLUMN Age INT CHECK (Age >= 16 AND Age <= 70 ); #Esto lo hacen los check constraints
+
+/*
+4)
+Describe the referential integrity between tables film, actor and film_actor in sakila db.
+*/
+
+#La tabla film_actor es una tabla intermedia entre film y actor, esta contiene las FK de las tablas film y actor.
+#Esta tabla es necesaria porque existe una relacion de muchos a muchos donde un actor actua en muchas 
+#peliculas, mientras que una pelicula tiene varios actores. La tabla conecta los id de las peliculas y los actores.
+
+/*
+5)
+Create a new column called lastUpdate to table employee and use trigger(s) to keep the date-time updated on inserts and updates operations. 
+Bonus: add a column lastUpdateUser and the respective trigger(s) to specify who was the last MySQL user that changed the row (assume multiple users, other than root, can connect to MySQL and change this table).
+*/
+
+ALTER Table employees
+add COLUMN lastUpdate DATETIME
+
+SELECT * FROM employees
+
+
+CREATE Trigger UPDATE_TIME 
+after UPDATE ON employees
+BEGIN
+UPDATE employees SET `lastUpdate` = CURRENT_TIMESTAMP WHERE `employeeNumber` = 1036
+
+END
