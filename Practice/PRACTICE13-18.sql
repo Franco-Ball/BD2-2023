@@ -279,3 +279,120 @@ COALESCE(expression1, expression2, ..., expressionN)
 */
 SELECT actor_id, first_name, COALESCE(last_name) AS last_name
 FROM actor;
+
+
+# +------------------------------- CLASS 15 ---------------------------------------------+
+
+/*
+1)
+Create a view named list_of_customers, it should contain the following columns:
+customer id
+customer full name,
+address
+zip code
+phone
+city
+country
+status (when active column is 1 show it as 'active', otherwise is 'inactive')
+store id
+*/
+
+#Hacer una view es lo mismo que hacer una query con lo que dice la consigna nada mas se agrega la primera linea de codigo
+#Con esto podes almacenar esta info en una "tabla virtual" que es mas rapida, aparte de customizable
+CREATE VIEW `list_of_customers` AS 
+SELECT customer_id, CONCAT(`first_name`,' ', `last_name`) AS fullname, 
+ad.address, ad.postal_code, ct.city, co.country, 
+CASE 
+WHEN active = 1 THEN 'active'  
+ELSE 'inactive'
+END as status, store_id
+FROM customer
+JOIN address ad USING(address_id)
+JOIN city ct USING(city_id)
+JOIN country co USING(country_id)
+
+
+/*
+2)
+Create a view named film_details, it should contain the following columns: 
+film id, title, description, category, price, length, rating, 
+actors - as a string of all the actors separated by comma. 
+Hint use GROUP_CONCAT
+*/
+
+#IMPORTANTE CUANDO USAS GROUP_CONCAT PONER UN GROUP BY SINO ANDA MAL
+#[or replace] despues del create hace que si ya esta creada la reemplace, bueno para ir probando
+create or replace view film_details AS
+SELECT film_id, title , description, cat.name as category, rental_rate, length, rating, GROUP_CONCAT(ac.first_name, ' ', ac.last_name, ';') as actors_list
+from film
+join film_category USING(film_id)
+join category cat USING(category_id)
+join film_actor USING(film_id)
+join actor ac USING(actor_id)
+GROUP BY film_id;
+
+#Llamar a la view para ver que estoy haciendo :P (y corregir)
+SELECT * FROM film_details
+
+/*
+3)
+Create view sales_by_film_category, 
+it should return 'category' and 'total_rental' columns.
+*/
+
+#El total de las rentas es la cantidad de plata recaudada // practicar hacer la cantidad de veces que se rento una pelicula x categoria
+CREATE or REPLACE view sales_by_film_category AS
+SELECT cat.name, SUM(p.amount) as total_rental
+FROM film
+JOIN film_category USING(film_id)
+JOIN category cat USING(category_id)
+JOIN inventory USING(film_id)
+JOIN rental USING(inventory_id)
+JOIN payment p USING(rental_id)
+GROUP BY cat.name;
+
+SELECT * FROM sales_by_film_category;
+
+/*
+4)
+Create a view called actor_information where it should return:
+actor id, first name, last name and the amount of films he/she acted on.
+*/
+
+#IMPORTANTE tratar de no usar subqueries en el count(no me salen :c), los joins andan bien
+CREATE or REPLACE VIEW actor_information AS
+SELECT ac.actor_id, ac.first_name, ac.last_name, 
+COUNT(fa.film_id) as featured_in
+FROM actor ac
+JOIN film_actor fa USING(actor_id)
+GROUP BY ac.actor_id;
+
+SELECT * FROM actor_information
+
+/*
+5)
+Analyze view actor_info, explain the entire query and specially how the sub query works.
+Be very specific, take some time and decompose each part and give an explanation for each.
+*/
+
+SELECT * FROM actor_info
+/*
+ La query dentro de la view "actor_info" devuelve como resultado:
+ a) El ID de cada actor
+ b) El nombre de cada actor
+ c) El apellido de cada actor
+ d) Una lista con todas las películas en las que este actua donde las mismas estan ordenadas alfabeticamente por categoria, las cuales tambien estan ordenadas de la misma manera
+ Ordenando alfabeticamente las categorías y dentro de cada una, organizando alfabeticamente las películas
+ */
+
+/*
+6)
+Materialized views, write a description, why they are used, alternatives, DBMS were they exist, etc.
+*/
+#COPIADO DE LA GUIA // TEORICO DE MATERIALIZED VIEWS
+/*
+ Las vistas materializadas son tablas que se crean mediante una consulta con los datos de otras tablas.  Esto proporciona un acceso mucho más eficiente, a costa de un incremento en el tamaño de la base de datos y a una posible falta de sincronía, se emplean cuando se va a trabajar con uno grupo reducido de datos de manera reiterada y se requiere su almacenamiento para agilizar las consultas y facilitar el trabajo a la hora de consultar los datos almacenados.
+ Por ello, las views son utilizadas frecuentemente en todas las bases de datos que poseen grandes cantidades de datos o, en su defecto, emplean un grupo de datos de manera reiterada en sus consultas y demás.
+Una de sus alternativas es una simple vista, la cual no se almacena en la memoria y siempre se actualiza cuando modificamos los datos de una tabla.
+Las vistas materializadas son existen en los siguientes DBMS: PostgreSQL, MySQL, Microsoft SQL Server, Oravle, Snowflake, Redshift, MongoDB, entre otros
+ */
