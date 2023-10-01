@@ -155,3 +155,127 @@ SELECT CURRENT_TIMESTAMP,
 (SELECT rental_rate FROM film WHERE film_id = (SELECT film_id FROM inventory WHERE inventory_id=10))
 ;
 
+
+# +------------------------------- CLASS 14 ---------------------------------------------+
+
+/*
+1)
+Write a query that gets all the customers that live in Argentina. Show the first and last name in one column, the address and the city.
+*/
+
+#Usar group_concat para poner dos columnas o mas en una sola
+#SOLUCION JOIN
+SELECT GROUP_CONCAT(first_name, ' ', last_name) as nombre_completo, a.address as direccion, ct.city as ciudad 
+FROM customer
+JOIN address a USING(address_id)
+JOIN city ct USING(city_id)
+JOIN country c USING(country_id)
+WHERE c.country LIKE 'Argentina'
+GROUP by direccion, ciudad;
+
+/*
+2)
+Write a query that shows the film title, language and rating. 
+Rating shall be shown as the full text described here:
+https://en.wikipedia.org/wiki/Motion_picture_content_rating_system#United_States. 
+Hint: use case.
+*/
+#Case es como un switch!! Muy importante poner end al final del case
+SELECT f.title, 
+CASE 
+WHEN f.rating LIKE 'G' THEN 'All ages admitted'
+WHEN f.rating LIKE 'PG' THEN 'Some material may not be suitable for children'
+WHEN f.rating LIKE 'PG-13' THEN 'Some material may be inappropriate for children under 13'
+WHEN f.rating LIKE 'R' THEN 'Under 17 requires accompanying parent or adult guardian'
+WHEN f.rating LIKE 'NC-17' THEN 'No one 17 and under admitted'
+END,
+l.name
+FROM film f
+JOIN language l USING(language_id)
+
+/*
+3)
+Write a search query that shows all the films (title and release year) an actor was part of.
+Assume the actor comes from a text box introduced by hand from a web page. 
+Make sure to "adjust" the input text to try to find the films as effectively as you think is possible.
+*/
+
+#Usando subqueries
+SELECT f.title, f.release_year
+FROM film f
+WHERE film_id in (SELECT film_id FROM film_actor WHERE actor_id = (SELECT actor_id FROM actor WHERE first_name LIKE UPPER('%boB%') and last_name LIKE UPPER('%FaWceTt%')));
+
+#Usando JOIN // MAS FACIL
+SELECT f.title, f.release_year FROM film f
+JOIN film_actor USING(film_id)
+JOIN actor ac USING(actor_id)
+where ac.first_name LIKE UPPER('%boB%') and ac.last_name LIKE UPPER('%FaWceTt%');
+
+/*
+4)
+Find all the rentals done in the months of May and June. 
+Show the film title, customer name and if it was returned or not. 
+There should be returned column with two possible values 'Yes' and 'No'.
+*/
+
+SELECT f.title, CONCAT(c.first_name, ' ', c.last_name) as customer, 
+CASE
+WHEN return_date is NULL THEN 'NO'  
+ELSE 'YES'
+END as returned
+FROM rental 
+JOIN customer c USING(customer_id)
+JOIN inventory USING(inventory_id)
+JOIN film f USING(film_id)
+WHERE MONTH(date(rental_date)) = 6 or MONTH(date(rental_date)) = 5
+ORDER BY rental_id; 
+
+/*
+#5
+Investigate CAST and CONVERT functions. Explain the differences if any, write examples based on sakila DB.
+CAST FUNCTION
+The CAST() function converts a value (of any type) into the specified datatype.
+The syntax is as follows :
+CAST(<value> AS <datatype>)
+*/
+;
+SELECT film_id, title, CAST(rental_rate AS UNSIGNED) AS rental_rate_int
+FROM film;
+/*
+
+CONVERT FUNCTION
+The CONVERT() function converts a value into the specified datatype or character set.
+The syntax of this function is:
+CONVERT (<value>, <source charset>,<target charset>);
+*/
+SELECT film_id, title, CONVERT(rental_duration, CHAR) AS rental_duration_str
+FROM film;
+/*
+Differences
+CAST is ANSI SQL standard, while CONVERT is specific to MySQL.
+CONVERT has an optional second parameter that allows specifying a specific character set for string conversions.
+*/
+#6
+/*
+NVL Function (Not Available in MySQL):
+The NVL function is used in Oracle databases to replace a null value with an alternative value. It has the following syntax:
+NVL(expression, replace_with)
+
+
+ISNULL Function (Available in SQL Server, Sybase, etc., but not MySQL):
+The ISNULL function is used in some database systems like SQL Server to replace a null value with an alternative value. It has the following syntax:
+ISNULL(expression, replace_with)
+
+IFNULL Function (MySQL-Specific):
+The IFNULL function is specific to MySQL and is used to replace a null value with an alternative value. It has the following syntax:
+IFNULL(expression, replace_with)
+*/;
+SELECT actor_id, first_name, IFNULL(last_name, 'No last name') AS last_name
+FROM actor;
+/*
+COALESCE Function:
+The COALESCE function is a standard SQL function that works in many database systems, including MySQL. It returns the first non-null expression from a list of expressions. Its syntax is:
+COALESCE(expression1, expression2, ..., expressionN)
+*/
+SELECT actor_id, first_name, COALESCE(last_name) AS last_name
+FROM actor;
