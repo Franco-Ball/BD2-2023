@@ -587,3 +587,149 @@ WHERE MATCH(description) AGAINST("mad")
 ORDER BY description;
 # 26ms
 #la segunda query es mucho mas rapida que la primera pq no recorre toda la tabla film sino que directamente usa el indice y se ahorra toda la comparacion
+
+
+# +------------------------------- CLASS 18 ---------------------------------------------+
+
+/*
+1)
+Write a function that returns the amount of copies of a film in a store in sakila-db. 
+Pass either the film id or the film name and the store id.
+*/
+#FUNCTION ID
+DELIMITER $$
+CREATE Function stck(peli_id int, tienda int) RETURNS INT
+DETERMINISTIC
+BEGIN
+DECLARE film_count int;
+
+SELECT COUNT(*) into film_count
+FROM inventory i
+JOIN film f USING(film_id)
+WHERE store_id = tienda and i.film_id = peli_id
+
+RETURN film_count;
+
+END $$
+DELIMITER ;
+
+SELECT stck(1,2);
+
+#FUNCTION TITULO
+DELIMITER $$
+CREATE Function stck_titulo(titulo varchar(255), tienda int) RETURNS INT
+DETERMINISTIC
+BEGIN
+DECLARE film_count int;
+
+SELECT COUNT(*) into film_count
+FROM inventory i
+JOIN film f USING(film_id)
+WHERE store_id = tienda and f.title = titulo;
+
+RETURN film_count;
+
+END $$
+DELIMITER ;
+
+SELECT stck_titulo('ACE GOLDFINGER', 2)
+
+#Filtrar por id
+DELIMITER $$
+CREATE PROCEDURE stock_by_film_id(IN peli_id int, in tienda int)
+BEGIN
+SELECT f.title, COUNT(*) as stock
+FROM inventory i
+JOIN film f USING(film_id)
+WHERE store_id = tienda and i.film_id = peli_id
+GROUP BY f.title;
+END $$
+DELIMITER ;
+
+#Para llamar al stored procedure!
+CALL stock_by_film_id(2, 2);
+
+#Para borrarlo!
+drop PROCEDURE stock_by_film_id;
+
+#Filtrar por titulo
+DELIMITER $$
+CREATE Procedure stock_by_title(IN film_name varchar(255), in tienda int)
+begin
+SELECT f.film_id, f.title, COUNT(*) as stock
+FROM inventory i
+JOIN film f USING(film_id)
+WHERE store_id = tienda and f.title LIKE film_name
+GROUP BY f.title, f.film_id;
+END $$
+DELIMITER ;
+
+CALL stock_by_title('ACE GOLDFINGER', 2)
+
+DROP Procedure sotck_by_title
+
+/*
+2)
+Write a stored procedure with an output parameter that contains
+a list of customer first and last names separated by ";", that live in a certain country. 
+You pass the country it gives you the list of people living there. 
+USE A CURSOR, do not use any aggregation function like CONTCAT_WS.
+*/
+
+drop Procedure search_customer_by_country;
+
+DELIMITER $$
+CREATE Procedure search_customer_by_country(in country_name VARCHAR(255), OUT customer_list VARCHAR(1000))
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE customer_name VARCHAR(255) DEFAULT '';
+
+    DECLARE customer_cursor CURSOR FOR
+    SELECT CONCAT(first_name, ' ', last_name) as Cliente
+    FROM customer 
+    JOIN address USING(address_id)
+    JOIN city USING(city_id)
+    JOIN country USING(country_id)
+    WHERE country = country_name;
+
+    DECLARE CONTINUE HANDLER for NOT FOUND SET done = 1;
+
+    SET customer_list = '';
+
+    OPEN customer_cursor;
+
+    loop_label : LOOP
+    FETCH customer_cursor INTO customer_name;
+
+    IF done = 1 THEN
+        leave loop_label;
+    END IF;
+
+    IF customer_list = '' THEN
+        set customer_list = customer_name;
+    ELSE
+        set customer_list=CONCAT (customer_list , '; ', customer_name);
+    END IF;
+
+    END LOOP loop_label;
+
+    CLOSE customer_cursor;
+
+END $$
+DELIMITER ;
+
+CALL search_customer_by_country('Argentina', @customer_list);
+SELECT @customer_list;
+
+/*
+3)
+Review the function inventory_in_stock and the procedure film_in_stock explain the code, write usage examples.
+*/
+
+/*
+ Cuando llamamos a la funcion "inventory_in_stock" esta devuelve verdadero o falso dependiendo de si el articulo  del inventario que le pasamos por parametro está en stock o no teniendo en cuenta los alquileres relacionados.
+ Esta funcion busca el id que le pasamos por parametro entre los ids de la tabla rental, si lo encuentra devuelve falso y si no devuelve verdadero
+ Cuando usamos el procedimiento "film_in_stock" este nos permite saber si una pelicula está en stock en una determinada tienda gracias a los paramentros que ingresamos
+ para usar este procedimiento hay que pasarle "film_id" y "store_id", luego busca en la tabla del inventario con esos datos y llama a la funcion "inventory_in_stock".
+ Si encuentra el id de la pelicula y de la store que mandamos y "inventory_in_stock" resulta verdadero este procedimiento nos devuelve la cantidad de copias disponibles
+*/
