@@ -525,3 +525,65 @@ END
 
 
 # +------------------------------- CLASS 17 ---------------------------------------------+
+
+/*
+1)
+Create two or three queries using address table in sakila db:
+include postal_code in where (try with in/not it operator)
+eventually join the table with city/country tables.
+measure execution time.
+Then create an index for postal_code on address table.
+measure execution time again and compare with the previous ones.
+Explain the results
+*/
+
+SELECT address, city, country, postal_code FROM address 
+JOIN city USING(city_id)
+JOIN country USING(country_id)
+WHERE postal_code not in('35200', '17886')
+
+CREATE INDEX postal_code ON address(postal_code);
+
+#Con el indice creado la query es mas rapida porque busca directamente en postal code e ignora las otras rows hasta que cumplen la condicion del where
+
+/*
+2)
+Run queries using actor table, searching for first and last name columns independently. 
+Explain the differences and why is that happening?
+*/
+
+SELECT first_name
+FROM actor
+ORDER BY first_name;
+#16ms
+
+SELECT last_name
+FROM actor
+ORDER BY last_name;
+#9ms
+#la query donde se ordena por nombre es mas lenta porque no existe un index en sakila
+#mientras que para el apellido si, por lo que esta es mas rapida
+
+/*
+3)
+Compare results finding text in the description on table film with LIKE and in the film_text using MATCH ... AGAINST. 
+Explain the results.
+*/
+
+SELECT description
+FROM film
+WHERE description LIKE "%Character%"
+ORDER BY description;
+# 105ms
+
+#para usar match y against, hay que crear el index "Fulltext_idx"
+
+#Depende que contiene la columna del index hay que poner fulltext o no. En este caso si pq es texto
+CREATE FULLTEXT INDEX FullText_idx ON film(description);
+
+SELECT description
+FROM film
+WHERE MATCH(description) AGAINST("mad")
+ORDER BY description;
+# 26ms
+#la segunda query es mucho mas rapida que la primera pq no recorre toda la tabla film sino que directamente usa el indice y se ahorra toda la comparacion
