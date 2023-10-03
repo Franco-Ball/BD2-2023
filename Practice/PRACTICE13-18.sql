@@ -523,6 +523,25 @@ WHERE film_id = old.film_id;
 END
 #borra automáticamente filas en la tabla film_text cuando se elimina una fila correspondiente en otra tabla. 
 
+/*                            EXTRA EXERCISES                                  */
+
+#Crear un trigger que actualize otra tabla cuando hacemos un insert
+
+create Table employees_Audit(id int not null AUTO_INCREMENT PRIMARY KEY, time DATETIME, user varchar(100));
+alter table employees_audit add COLUMN employee_id int;
+CREATE Trigger after_insert_employees
+BEFORE INSERT ON employees FOR EACH ROW 
+BEGIN
+    INSERT INTO employees_audit(time, user, employee_id)
+    VALUES(CURRENT_TIMESTAMP, user(), new.employeeNumber);
+END;
+
+insert  into `employees`(`employeeNumber`,`lastName`,`firstName`,`extension`,`email`,`officeCode`,`reportsTo`,`jobTitle`) values 
+(2000,'CARLITOS','GALAVERNA','x5800','negros@classicmodelcars.com','1',NULL,'CONSERJE');
+
+DESCRIBE employees;
+
+SELECT * FROM employees
 
 # +------------------------------- CLASS 17 ---------------------------------------------+
 
@@ -733,3 +752,17 @@ Review the function inventory_in_stock and the procedure film_in_stock explain t
  para usar este procedimiento hay que pasarle "film_id" y "store_id", luego busca en la tabla del inventario con esos datos y llama a la funcion "inventory_in_stock".
  Si encuentra el id de la pelicula y de la store que mandamos y "inventory_in_stock" resulta verdadero este procedimiento nos devuelve la cantidad de copias disponibles
 */
+
+# +------------------------------- CLASS 19 ---------------------------------------------+
+
+/*
+1)
+Create a user data_analyst
+*/
+CREATE USER franco IDENTIFIED BY 'pepe1234';
+
+/*
+2)
+Grant permissions only to SELECT, UPDATE and DELETE to all sakila tables to it.
+*/
+GRANT SELECT, UPDATE, DELETE ON sakila.* TO 'franco'@'localhost';
